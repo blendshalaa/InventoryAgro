@@ -1,10 +1,47 @@
 import { useState, useEffect } from 'react';
 import { format } from 'date-fns';
 import { sq } from 'date-fns/locale';
+import { Printer } from 'lucide-react';
 import { getTransactions } from '../db';
 import { t } from '../lib/i18n';
 import * as XLSX from 'xlsx';
 import { jsPDF } from 'jspdf';
+
+function printInvoice(tx) {
+  const dateStr = format(new Date(tx.date), "dd.MM.yyyy HH:mm", { locale: sq });
+  const typeLabel = tx.type === 'IN' ? t.history.in : t.history.out;
+  const html = `
+<!DOCTYPE html>
+<html><head><meta charset="utf-8"><title>Faturë</title>
+<style>
+  body { font-family: system-ui,sans-serif; max-width: 400px; margin: 24px auto; padding: 16px; }
+  h1 { font-size: 1.25rem; margin: 0 0 16px; }
+  table { width: 100%; border-collapse: collapse; }
+  th, td { text-align: left; padding: 6px 0; border-bottom: 1px solid #eee; }
+  .total { font-weight: bold; font-size: 1.1rem; margin-top: 12px; }
+  @media print { body { margin: 12px; } }
+</style></head><body>
+  <h1>Menaxhimi i Inventarit — Faturë</h1>
+  <p style="color:#666;margin:0 0 12px;">${dateStr} · ${typeLabel}</p>
+  <table>
+    <tr><th>Produkti</th><th>Sasia</th><th>Çmimi</th><th>Totali</th></tr>
+    <tr>
+      <td>${(tx.productName || '').replace(/</g, '&lt;')}</td>
+      <td>${tx.quantity}</td>
+      <td>${(tx.pricePerUnit ?? 0).toFixed(2)} €</td>
+      <td>${(tx.totalValue ?? 0).toFixed(2)} €</td>
+    </tr>
+  </table>
+  <p class="total">Total: ${(tx.totalValue ?? 0).toFixed(2)} €</p>
+  ${tx.note ? `<p style="margin-top:12px;color:#666;">Shënim: ${(tx.note || '').replace(/</g, '&lt;')}</p>` : ''}
+  <script>window.onload = function() { window.print(); }<\/script>
+</body></html>`;
+  const w = window.open('', '_blank');
+  if (w) {
+    w.document.write(html);
+    w.document.close();
+  }
+}
 
 export default function History() {
   const [transactions, setTransactions] = useState([]);
@@ -167,6 +204,7 @@ export default function History() {
                   </th>
                   <th className="px-4 py-3 font-medium">{t.history.total}</th>
                   <th className="px-4 py-3 font-medium">{t.history.note}</th>
+                  <th className="px-4 py-3 font-medium w-24"></th>
                 </tr>
               </thead>
               <tbody>
@@ -201,6 +239,16 @@ export default function History() {
                     </td>
                     <td className="px-4 py-3 text-slate-600 max-w-[180px] truncate">
                       {tx.note || '—'}
+                    </td>
+                    <td className="px-4 py-3">
+                      <button
+                        type="button"
+                        onClick={() => printInvoice(tx)}
+                        className="p-2 text-slate-600 hover:bg-slate-100 rounded-lg transition-colors"
+                        title={t.history.printInvoice}
+                      >
+                        <Printer className="w-4 h-4" />
+                      </button>
                     </td>
                   </tr>
                 ))}

@@ -7,6 +7,8 @@ import StockIn from './pages/StockIn';
 import StockOut from './pages/StockOut';
 import History from './pages/History';
 import Reports from './pages/Reports';
+import Backup from './pages/Backup';
+import Categories from './pages/Categories';
 
 export default function App() {
   return (
@@ -20,6 +22,8 @@ export default function App() {
         <Route path="stock-out" element={<StockOut />} />
         <Route path="history" element={<History />} />
         <Route path="reports" element={<Reports />} />
+        <Route path="categories" element={<Categories />} />
+        <Route path="backup" element={<Backup />} />
       </Route>
     </Routes>
   );

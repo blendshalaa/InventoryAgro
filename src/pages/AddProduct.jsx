@@ -1,14 +1,15 @@
 import { useState, useEffect } from 'react';
 import { useNavigate, useParams } from 'react-router-dom';
-import { addProduct, getProduct, updateProduct } from '../db';
+import { addProduct, getProduct, updateProduct, getCategories } from '../db';
 import { t } from '../lib/i18n';
 
 const defaultForm = {
   name: '',
   unit: 'copë',
-  currentStock: 0,
-  minStock: 0,
-  price: 0,
+  categoryId: '',
+  currentStock: '',
+  minStock: '',
+  price: '',
 };
 
 export default function AddProduct() {
@@ -16,8 +17,13 @@ export default function AddProduct() {
   const navigate = useNavigate();
   const isEdit = Boolean(id);
   const [form, setForm] = useState(defaultForm);
+  const [categories, setCategories] = useState([]);
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState('');
+
+  useEffect(() => {
+    getCategories().then(setCategories);
+  }, []);
 
   useEffect(() => {
     if (isEdit && id) {
@@ -26,6 +32,7 @@ export default function AddProduct() {
           setForm({
             name: p.name || '',
             unit: p.unit || 'copë',
+            categoryId: p.categoryId ?? '',
             currentStock: p.currentStock ?? 0,
             minStock: p.minStock ?? 0,
             price: p.price ?? 0,
@@ -38,12 +45,18 @@ export default function AddProduct() {
     e.preventDefault();
     setError('');
     setLoading(true);
+    const payload = {
+      ...form,
+      currentStock: Number(form.currentStock) || 0,
+      minStock: Number(form.minStock) || 0,
+      price: Number(form.price) || 0,
+    };
     try {
       if (isEdit) {
-        await updateProduct(Number(id), form);
+        await updateProduct(Number(id), payload);
         navigate('/products');
       } else {
-        await addProduct(form);
+        await addProduct(payload);
         navigate('/products');
       }
     } catch (err) {
@@ -86,6 +99,21 @@ export default function AddProduct() {
         </div>
         <div>
           <label className="block text-sm font-medium text-slate-700 mb-1">
+            {t.addProduct.category}
+          </label>
+          <select
+            value={form.categoryId}
+            onChange={(e) => update('categoryId', e.target.value)}
+            className="w-full px-4 py-2 border border-slate-200 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-blue-500 outline-none"
+          >
+            <option value="">{t.addProduct.categoryOptional}</option>
+            {categories.map((c) => (
+              <option key={c.id} value={c.id}>{c.name}</option>
+            ))}
+          </select>
+        </div>
+        <div>
+          <label className="block text-sm font-medium text-slate-700 mb-1">
             {t.addProduct.unit}
           </label>
           <input
@@ -107,7 +135,7 @@ export default function AddProduct() {
               step={1}
               value={form.currentStock}
               onChange={(e) =>
-                update('currentStock', parseFloat(e.target.value) || 0)
+                update('currentStock', e.target.value === '' ? '' : (parseFloat(e.target.value) || 0))
               }
               className="w-full px-4 py-2 border border-slate-200 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-blue-500 outline-none"
             />
@@ -122,7 +150,7 @@ export default function AddProduct() {
               step={1}
               value={form.minStock}
               onChange={(e) =>
-                update('minStock', parseFloat(e.target.value) || 0)
+                update('minStock', e.target.value === '' ? '' : (parseFloat(e.target.value) || 0))
               }
               className="w-full px-4 py-2 border border-slate-200 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-blue-500 outline-none"
             />
@@ -138,7 +166,7 @@ export default function AddProduct() {
             step={0.01}
             value={form.price}
             onChange={(e) =>
-              update('price', parseFloat(e.target.value) || 0)
+              update('price', e.target.value === '' ? '' : (parseFloat(e.target.value) || 0))
             }
             className="w-full px-4 py-2 border border-slate-200 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-blue-500 outline-none"
           />

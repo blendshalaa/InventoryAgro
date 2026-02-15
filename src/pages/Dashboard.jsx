@@ -1,6 +1,6 @@
 import { useState, useEffect } from 'react';
 import { Link } from 'react-router-dom';
-import { Package, AlertTriangle, Wallet, ArrowRight } from 'lucide-react';
+import { Package, AlertTriangle, Wallet, ArrowRight, Download, X } from 'lucide-react';
 import { format } from 'date-fns';
 import { sq } from 'date-fns/locale';
 import {
@@ -10,11 +10,34 @@ import {
 } from '../db';
 import { t } from '../lib/i18n';
 
+const INSTALL_DISMISSED_KEY = 'inventory-pwa-install-dismissed';
+
 export default function Dashboard() {
   const [products, setProducts] = useState([]);
   const [transactions, setTransactions] = useState([]);
   const [lowStock, setLowStock] = useState([]);
   const [loading, setLoading] = useState(true);
+  const [showInstallBanner, setShowInstallBanner] = useState(true);
+  const [isStandalone, setIsStandalone] = useState(false);
+
+  useEffect(() => {
+    setIsStandalone(
+      window.matchMedia('(display-mode: standalone)').matches ||
+      !!window.navigator.standalone
+    );
+    try {
+      setShowInstallBanner(!localStorage.getItem(INSTALL_DISMISSED_KEY));
+    } catch {
+      setShowInstallBanner(true);
+    }
+  }, []);
+
+  const dismissInstall = () => {
+    setShowInstallBanner(false);
+    try {
+      localStorage.setItem(INSTALL_DISMISSED_KEY, '1');
+    } catch {}
+  };
 
   useEffect(() => {
     async function load() {
@@ -47,6 +70,28 @@ export default function Dashboard() {
   return (
     <div className="space-y-8">
       <h1 className="text-2xl font-bold text-slate-800">{t.dashboard.title}</h1>
+
+      {showInstallBanner && !isStandalone && (
+        <div className="bg-blue-50 border border-blue-200 rounded-xl p-4 flex items-start gap-4">
+          <div className="w-10 h-10 rounded-lg bg-blue-100 flex items-center justify-center shrink-0">
+            <Download className="w-5 h-5 text-blue-600" />
+          </div>
+          <div className="flex-1 min-w-0">
+            <h3 className="font-semibold text-blue-900">Instalo aplikacionin në laptop</h3>
+            <p className="text-sm text-blue-800 mt-1">
+              Në <strong>Chrome</strong>: kliko <strong>⋮</strong> (tre pika) lart djathtas në shfletues → zgjidh <strong>&quot;Instalo Menaxhimi i Inventarit&quot;</strong> ose <strong>&quot;Install app&quot;</strong>. Pastaj e gjen si program në desktop.
+            </p>
+          </div>
+          <button
+            type="button"
+            onClick={dismissInstall}
+            className="p-1.5 text-blue-600 hover:bg-blue-100 rounded-lg transition-colors shrink-0"
+            aria-label="Mbyll"
+          >
+            <X className="w-5 h-5" />
+          </button>
+        </div>
+      )}
 
       <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4">
         <div className="bg-white rounded-xl shadow-sm border border-slate-200 p-5">

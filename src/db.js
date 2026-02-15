@@ -8,6 +8,34 @@ db.version(1).stores({
     '++id, productId, productName, type, quantity, totalValue, date, createdAt',
 });
 
+db.version(2).stores({
+  products: '++id, name, categoryId, currentStock, minStock, price, createdAt, updatedAt',
+  transactions: '++id, productId, productName, type, quantity, totalValue, date, createdAt',
+  categories: '++id, name',
+});
+
+// Categories CRUD
+export async function getCategories() {
+  return db.categories.orderBy('name').toArray();
+}
+
+export async function addCategory(name) {
+  const n = String(name || '').trim();
+  if (!n) throw new Error('Emri i kategorisë është bosh.');
+  return db.categories.add({ name: n });
+}
+
+export async function updateCategory(id, name) {
+  const n = String(name || '').trim();
+  if (!n) throw new Error('Emri i kategorisë është bosh.');
+  await db.categories.update(id, { name: n });
+}
+
+export async function deleteCategory(id) {
+  await db.products.where('categoryId').equals(id).modify({ categoryId: undefined });
+  await db.categories.delete(id);
+}
+
 // Products CRUD
 export async function getProducts() {
   return db.products.orderBy('name').toArray();
@@ -22,6 +50,7 @@ export async function addProduct(product) {
   const id = await db.products.add({
     name: product.name.trim(),
     unit: product.unit || 'copë',
+    categoryId: product.categoryId || undefined,
     currentStock: Number(product.currentStock) || 0,
     minStock: Number(product.minStock) || 0,
     price: Number(product.price) || 0,
@@ -39,6 +68,7 @@ export async function updateProduct(id, updates) {
     ...updates,
     name: updates.name != null ? String(updates.name).trim() : existing.name,
     unit: updates.unit ?? existing.unit,
+    categoryId: updates.categoryId !== undefined ? (updates.categoryId || undefined) : existing.categoryId,
     currentStock:
       updates.currentStock != null
         ? Number(updates.currentStock)
@@ -127,4 +157,36 @@ export async function getRecentTransactions(limit = 10) {
 export async function getLowStockProducts() {
   const all = await db.products.toArray();
   return all.filter((p) => p.minStock > 0 && p.currentStock < p.minStock);
+}
+
+// Backup: export all data as JSON
+export async function exportBackup() {
+  const [products, transactions, categories] = await Promise.all([
+    db.products.toArray(),
+    db.transactions.toArray(),
+    db.categories.toArray(),
+  ]);
+  return {
+    version: 2,
+    exportedAt: new Date().toISOString(),
+    products,
+    transactions,
+    categories: categories || [],
+  };
+}
+
+// Restore: replace all data from JSON (must have products + transactions arrays)
+export async function importBackup(data) {
+  if (!data || !Array.isArray(data.products) || !Array.isArray(data.transactions)) {
+    throw new Error('Skedari i backup-it nuk është i vlefshëm.');
+  }
+  const categories = Array.isArray(data.categories) ? data.categories : [];
+  await db.transaction('rw', db.products, db.transactions, db.categories, async () => {
+    await db.categories.clear();
+    await db.products.clear();
+    await db.transactions.clear();
+    if (categories.length) await db.categories.bulkPut(categories);
+    if (data.products.length) await db.products.bulkPut(data.products);
+    if (data.transactions.length) await db.transactions.bulkPut(data.transactions);
+  });
 }

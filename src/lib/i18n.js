@@ -9,6 +9,27 @@ export const t = {
     stockOut: 'Dalje stoku',
     history: 'Historiku',
     reports: 'Raportet',
+    categories: 'Kategoritë',
+    backup: 'Backup',
+  },
+  categories: {
+    title: 'Kategoritë',
+    name: 'Emri i kategorisë',
+    add: 'Shto kategori',
+    edit: 'Ndrysho',
+    delete: 'Fshi',
+    noCategories: 'Nuk ka kategori. Shtoni të parën.',
+    confirmDelete: 'Fshi këtë kategori? Produktet e saj do të mbeten pa kategori.',
+  },
+  backup: {
+    title: 'Backup dhe Restore',
+    export: 'Eksporto backup',
+    exportHint: 'Shkarkon të gjitha produktet dhe transaksionet në një skedar.',
+    import: 'Restore nga skedar',
+    importHint: 'Zëvendëson të gjitha të dhënat me ato nga skedari. Bëj një backup përpara.',
+    importConfirm: 'A jeni të sigurt? Të gjitha të dhënat e tanishme do të zëvendësohen.',
+    exportSuccess: 'Backup u shkarkua.',
+    importSuccess: 'Të dhënat u restoruan.',
   },
   dashboard: {
     title: 'Paneli',
@@ -23,6 +44,8 @@ export const t = {
   products: {
     title: 'Produktet',
     search: 'Kërko produkt...',
+    category: 'Kategoria',
+    filterCategory: 'Të gjitha kategoritë',
     name: 'Emri',
     unit: 'Njësia',
     currentStock: 'Stoku aktual',
@@ -38,6 +61,8 @@ export const t = {
   addProduct: {
     title: 'Shto produkt',
     editTitle: 'Ndrysho produktin',
+    category: 'Kategoria',
+    categoryOptional: 'Pa kategori',
     name: 'Emri i produktit',
     namePlaceholder: 'p.sh. Ushqim bagëtish',
     unit: 'Njësia',
@@ -73,6 +98,7 @@ export const t = {
     errorLowStock: 'Stoku i mbetur nuk mjafton.',
   },
   history: {
+    printInvoice: 'Printo faturë',
     title: 'Historiku i transaksioneve',
     type: 'Lloji',
     all: 'Të gjitha',
@@ -112,5 +138,7 @@ export const t = {
     save: 'Ruaj',
     delete: 'Fshi',
     back: 'Kthehu',
+    installApp: 'Instalo si aplikacion',
+    installAppHint: 'Shtyp këtu për ta instaluar në desktop (Chrome/Edge).',
   },
 };

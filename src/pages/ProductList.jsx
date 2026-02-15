@@ -1,19 +1,22 @@
 import { useState, useEffect } from 'react';
 import { Link } from 'react-router-dom';
 import { Pencil, Trash2, Plus } from 'lucide-react';
-import { getProducts, deleteProduct } from '../db';
+import { getProducts, getCategories, deleteProduct } from '../db';
 import { t } from '../lib/i18n';
 
 export default function ProductList() {
   const [products, setProducts] = useState([]);
+  const [categories, setCategories] = useState([]);
   const [search, setSearch] = useState('');
+  const [categoryFilter, setCategoryFilter] = useState('');
   const [loading, setLoading] = useState(true);
   const [deletingId, setDeletingId] = useState(null);
 
   const load = async () => {
     setLoading(true);
-    const list = await getProducts();
+    const [list, cats] = await Promise.all([getProducts(), getCategories()]);
     setProducts(list);
+    setCategories(cats);
     setLoading(false);
   };
 
@@ -21,12 +24,15 @@ export default function ProductList() {
     load();
   }, []);
 
-  const filtered = products.filter(
-    (p) =>
-      !search ||
-      p.name.toLowerCase().includes(search.toLowerCase()) ||
-      (p.unit && p.unit.toLowerCase().includes(search.toLowerCase()))
-  );
+  const categoryMap = Object.fromEntries((categories || []).map((c) => [c.id, c.name]));
+
+  const filtered = products.filter((p) => {
+    if (search && !p.name.toLowerCase().includes(search.toLowerCase()) &&
+        !(p.unit && p.unit.toLowerCase().includes(search.toLowerCase())))
+      return false;
+    if (categoryFilter && p.categoryId !== Number(categoryFilter)) return false;
+    return true;
+  });
 
   const handleDelete = async (id, name) => {
     if (!window.confirm(t.products.confirmDelete + ` "${name}"?`)) return;
@@ -53,14 +59,24 @@ export default function ProductList() {
       </div>
 
       <div className="bg-white rounded-xl shadow-sm border border-slate-200 overflow-hidden">
-        <div className="p-4 border-b border-slate-200">
+        <div className="p-4 border-b border-slate-200 flex flex-wrap gap-3 items-end">
           <input
             type="search"
             placeholder={t.products.search}
             value={search}
             onChange={(e) => setSearch(e.target.value)}
-            className="w-full max-w-md px-4 py-2 border border-slate-200 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-blue-500 outline-none"
+            className="w-full max-w-xs px-4 py-2 border border-slate-200 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-blue-500 outline-none"
           />
+          <select
+            value={categoryFilter}
+            onChange={(e) => setCategoryFilter(e.target.value)}
+            className="px-4 py-2 border border-slate-200 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-blue-500 outline-none min-w-[160px]"
+          >
+            <option value="">{t.products.filterCategory}</option>
+            {categories.map((c) => (
+              <option key={c.id} value={c.id}>{c.name}</option>
+            ))}
+          </select>
         </div>
         <div className="overflow-x-auto">
           {loading ? (
@@ -82,6 +98,7 @@ export default function ProductList() {
               <thead>
                 <tr className="bg-slate-50 text-slate-600 text-left">
                   <th className="px-4 py-3 font-medium">{t.products.name}</th>
+                  <th className="px-4 py-3 font-medium">{t.products.category}</th>
                   <th className="px-4 py-3 font-medium">{t.products.unit}</th>
                   <th className="px-4 py-3 font-medium">
                     {t.products.currentStock}
@@ -107,6 +124,9 @@ export default function ProductList() {
                       }`}
                     >
                       <td className="px-4 py-3 font-medium">{p.name}</td>
+                      <td className="px-4 py-3 text-slate-600">
+                        {p.categoryId ? (categoryMap[p.categoryId] || '—') : '—'}
+                      </td>
                       <td className="px-4 py-3 text-slate-600">{p.unit}</td>
                       <td className="px-4 py-3">
                         <span

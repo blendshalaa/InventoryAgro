@@ -7,8 +7,11 @@ import {
   ArrowUpCircle,
   History,
   FileText,
+  FolderTree,
+  Database,
 } from 'lucide-react';
 import { t } from '../lib/i18n';
+import InstallButton from './InstallButton';
 
 const navItems = [
   { to: '/', icon: LayoutDashboard, label: t.nav.dashboard },
@@ -18,6 +21,8 @@ const navItems = [
   { to: '/stock-out', icon: ArrowUpCircle, label: t.nav.stockOut },
   { to: '/history', icon: History, label: t.nav.history },
   { to: '/reports', icon: FileText, label: t.nav.reports },
+  { to: '/categories', icon: FolderTree, label: t.nav.categories },
+  { to: '/backup', icon: Database, label: t.nav.backup },
 ];
 
 export default function Sidebar({ onNavigate }) {
@@ -48,6 +53,7 @@ export default function Sidebar({ onNavigate }) {
           </NavLink>
         ))}
       </nav>
+      <InstallButton />
     </aside>
   );
 }
