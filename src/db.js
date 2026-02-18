@@ -121,11 +121,7 @@ export async function addTransaction(tx) {
   const pricePerUnit = Number(tx.pricePerUnit) ?? product.price;
   const totalValue = quantity * pricePerUnit;
   const type = tx.type === 'OUT' ? 'OUT' : 'IN';
-  if (type === 'OUT' && product.currentStock < quantity) {
-    throw new Error(
-      `Stoku i mbetur (${product.currentStock} ${product.unit}) nuk mjafton. Sasia e kërkuar: ${quantity}`
-    );
-  }
+  // Allow stock to go negative — no restriction on OUT transactions
   const now = Date.now();
   const date = tx.date ? new Date(tx.date).toISOString() : new Date().toISOString();
   const id = await db.transactions.add({

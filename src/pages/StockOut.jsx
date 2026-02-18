@@ -24,10 +24,6 @@ export default function StockOut() {
   const handleSubmit = async (e) => {
     e.preventDefault();
     if (!productId || !quantity || Number(quantity) <= 0) return;
-    if (Number(quantity) > available) {
-      setMessage({ type: 'error', text: t.stockOut.errorLowStock });
-      return;
-    }
     setMessage({ type: '', text: '' });
     setLoading(true);
     try {
@@ -71,11 +67,10 @@ export default function StockOut() {
       >
         {message.text && (
           <div
-            className={`p-3 rounded-lg text-sm ${
-              message.type === 'success'
+            className={`p-3 rounded-lg text-sm ${message.type === 'success'
                 ? 'bg-emerald-50 text-emerald-700'
                 : 'bg-red-50 text-red-700'
-            }`}
+              }`}
           >
             {message.text}
           </div>
@@ -111,7 +106,6 @@ export default function StockOut() {
             type="number"
             required
             min={0.001}
-            max={available}
             step="any"
             value={quantity}
             onChange={(e) => setQuantity(e.target.value)}
@@ -156,7 +150,7 @@ export default function StockOut() {
         </div>
         <button
           type="submit"
-          disabled={loading || !productId || available <= 0}
+          disabled={loading || !productId}
           className="w-full py-2.5 bg-blue-600 text-white rounded-lg hover:bg-blue-700 transition-colors disabled:opacity-50"
         >
           {loading ? t.common.loading : t.stockOut.register}
